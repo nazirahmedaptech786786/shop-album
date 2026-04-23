@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>Secure Album Access</title>
+
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
+
+<style>
+body{
+  margin:0;
+  font-family:Arial;
+  background:#111;
+  color:white;
+  text-align:center;
+  padding:40px;
+}
+
+h1{color:#ff9800;}
+
+input{
+  padding:10px;
+  border-radius:5px;
+  border:none;
+  margin:10px;
+}
+
+button{
+  padding:10px 20px;
+  background:#ff9800;
+  border:none;
+  border-radius:5px;
+  font-weight:bold;
+  cursor:pointer;
+}
+
+#albumContent{display:none;margin-top:30px;}
+#error{color:red;margin-top:10px;}
+</style>
+</head>
+<body>
+
+<h1>🔒 Private Album Access</h1>
+
+<div id="passwordBox">
+  <p>Enter Album Password</p>
+  <input type="password" id="passwordInput" placeholder="Enter password">
+  <br>
+  <button onclick="checkPassword()">Unlock Album</button>
+  <div id="error"></div>
+</div>
+
+<div id="albumContent">
+  <h2>✅ Album Opened</h2>
+  <p id="customerName"></p>
+</div>
+
+<script>
+const firebaseConfig = {
+  apiKey: "AIzaSyAgZoSMT4LpAGUNUh3KQEVW-8ksGMTWsQs",
+  authDomain: "ahmed-paper-decoration--album.firebaseapp.com",
+  projectId: "ahmed-paper-decoration--album",
+  storageBucket: "ahmed-paper-decoration--album.firebasestorage.app",
+  messagingSenderId: "117106627667",
+  appId: "1:117106627667:web:693de89f8f8456c02562a6"
+};
+
+firebase.initializeApp(firebaseConfig);
+const db = firebase.firestore();
+
+const urlParams = new URLSearchParams(window.location.search);
+const albumId = urlParams.get("id");
+
+function checkPassword(){
+  const inputPassword = document.getElementById("passwordInput").value;
+
+  if(!albumId){
+    document.getElementById("error").innerText="Invalid album link.";
+    return;
+  }
+
+  db.collection("albums").doc(albumId).get().then(doc=>{
+    if(!doc.exists){
+      document.getElementById("error").innerText="Album not found.";
+      return;
+    }
+
+    const data = doc.data();
+
+    const now = new Date();
+    const expiryDate = new Date(data.expiry);
+
+    if(now > expiryDate){
+      document.getElementById("error").innerText="⏰ Album access expired.";
+      return;
+    }
+
+    if(inputPassword === data.password){
+      document.getElementById("passwordBox").style.display="none";
+      document.getElementById("albumContent").style.display="block";
+      document.getElementById("customerName").innerText=
+        "Customer: "+data.customerName;
+    } else {
+      document.getElementById("error").innerText="❌ Wrong password.";
+    }
+
+  });
+}
+</script>
+
+</body>
+</html>
