@@ -2,7 +2,7 @@
 <html>
 <head>
 <meta charset="UTF-8">
-<title>Secure Album Access</title>
+<title>Private Album Access</title>
 
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
@@ -35,7 +35,6 @@ button{
   cursor:pointer;
 }
 
-#albumContent{display:none;margin-top:30px;}
 #error{color:red;margin-top:10px;}
 </style>
 </head>
@@ -43,27 +42,19 @@ button{
 
 <h1>🔒 Private Album Access</h1>
 
-<div id="passwordBox">
-  <p>Enter Album Password</p>
-  <input type="password" id="passwordInput" placeholder="Enter password">
-  <br>
-  <button onclick="checkPassword()">Unlock Album</button>
-  <div id="error"></div>
-</div>
+<p>Enter Album Password</p>
 
-<div id="albumContent">
-  <h2>✅ Album Opened</h2>
-  <p id="customerName"></p>
-</div>
+<input type="password" id="passwordInput" placeholder="Enter password">
+<br>
+<button onclick="checkPassword()">Unlock Album</button>
+
+<div id="error"></div>
 
 <script>
 const firebaseConfig = {
   apiKey: "AIzaSyAgZoSMT4LpAGUNUh3KQEVW-8ksGMTWsQs",
   authDomain: "ahmed-paper-decoration--album.firebaseapp.com",
-  projectId: "ahmed-paper-decoration--album",
-  storageBucket: "ahmed-paper-decoration--album.firebasestorage.app",
-  messagingSenderId: "117106627667",
-  appId: "1:117106627667:web:693de89f8f8456c02562a6"
+  projectId: "ahmed-paper-decoration--album"
 };
 
 firebase.initializeApp(firebaseConfig);
@@ -73,6 +64,7 @@ const urlParams = new URLSearchParams(window.location.search);
 const albumId = urlParams.get("id");
 
 function checkPassword(){
+
   const inputPassword = document.getElementById("passwordInput").value;
 
   if(!albumId){
@@ -81,6 +73,7 @@ function checkPassword(){
   }
 
   db.collection("albums").doc(albumId).get().then(doc=>{
+
     if(!doc.exists){
       document.getElementById("error").innerText="Album not found.";
       return;
@@ -96,14 +89,14 @@ function checkPassword(){
       return;
     }
 
-if(inputPassword === data.password){
-  window.location.href = 
-    "view.html?id=" + albumId;
-}
+    if(inputPassword.trim() === data.password.trim()){
+      window.location.href = "view.html?id=" + albumId;
     } else {
       document.getElementById("error").innerText="❌ Wrong password.";
     }
 
+  }).catch(error=>{
+    document.getElementById("error").innerText="Error: " + error.message;
   });
 }
 </script>
