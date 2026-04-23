@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>Album Viewer</title>
+
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
+
+<style>
+body{
+  margin:0;
+  font-family:Arial;
+  background:#111;
+  color:white;
+  text-align:center;
+  padding:40px;
+}
+
+h1{color:#ff9800;}
+
+.albumBox{
+  background:#1e1e1e;
+  padding:30px;
+  border-radius:10px;
+  width:350px;
+  margin:30px auto;
+}
+
+.expired{
+  color:red;
+  font-weight:bold;
+}
+</style>
+</head>
+<body>
+
+<h1>📂 Album Viewer</h1>
+
+<div id="albumContent" class="albumBox"></div>
+
+<script>
+const firebaseConfig = {
+  apiKey: "AIzaSyAgZoSMT4LpAGUNUh3KQEVW-8ksGMTWsQs",
+  authDomain: "ahmed-paper-decoration--album.firebaseapp.com",
+  projectId: "ahmed-paper-decoration--album",
+  storageBucket: "ahmed-paper-decoration--album.firebasestorage.app",
+  messagingSenderId: "117106627667",
+  appId: "1:117106627667:web:693de89f8f8456c02562a6"
+};
+
+firebase.initializeApp(firebaseConfig);
+const db = firebase.firestore();
+
+const urlParams = new URLSearchParams(window.location.search);
+const albumId = urlParams.get("id");
+
+if(!albumId){
+  document.getElementById("albumContent").innerHTML =
+    "<p class='expired'>Invalid Album Link</p>";
+} else {
+
+  db.collection("albums").doc(albumId).get().then(doc=>{
+    if(!doc.exists){
+      document.getElementById("albumContent").innerHTML =
+        "<p class='expired'>Album Not Found</p>";
+      return;
+    }
+
+    const data = doc.data();
+    const now = new Date();
+    const expiryDate = new Date(data.expiry);
+
+    if(now > expiryDate){
+      document.getElementById("albumContent").innerHTML =
+        "<p class='expired'>⏰ Album Access Expired</p>";
+      return;
+    }
+
+    document.getElementById("albumContent").innerHTML = `
+      <h2>✅ ${data.customerName}</h2>
+      <p>Album Access Active</p>
+      <p>Expiry: ${expiryDate.toLocaleString()}</p>
+      <hr>
+      <p>📸 Photos will appear here (Next Step)</p>
+    `;
+  });
+}
+</script>
+
+</body>
+</html>
