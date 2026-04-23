@@ -1,0 +1,238 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>Secure Gallery</title>
+
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
+
+<style>
+body{
+  margin:0;
+  font-family:Arial;
+  background:#111;
+  color:white;
+}
+
+.header{
+  text-align:center;
+  padding:20px;
+  color:#ff9800;
+  font-size:22px;
+}
+
+.passwordBox{
+  text-align:center;
+  padding:40px;
+}
+
+input{
+  padding:10px;
+  border-radius:5px;
+  border:none;
+  margin:10px;
+}
+
+button{
+  padding:10px 20px;
+  background:#ff9800;
+  border:none;
+  border-radius:5px;
+  font-weight:bold;
+  cursor:pointer;
+}
+
+#error{
+  color:red;
+  margin-top:10px;
+}
+
+.categoryBar{
+  display:flex;
+  overflow-x:auto;
+  gap:10px;
+  padding:10px;
+  background:#1e1e1e;
+}
+
+.categoryBar button{
+  flex-shrink:0;
+  background:#333;
+  color:white;
+  border:none;
+  padding:8px 15px;
+  border-radius:20px;
+}
+
+.categoryBar button.active{
+  background:#ff9800;
+  color:black;
+}
+
+.gallery{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:10px;
+  padding:10px;
+}
+
+.gallery img{
+  width:100%;
+  aspect-ratio:1/1;
+  object-fit:cover;
+  border-radius:8px;
+}
+
+.fullscreen{
+  position:fixed;
+  top:0;
+  left:0;
+  width:100%;
+  height:100%;
+  background:black;
+  display:none;
+  justify-content:center;
+  align-items:center;
+}
+
+.fullscreen img{
+  max-width:95%;
+  max-height:95%;
+}
+
+.closeBtn{
+  position:absolute;
+  top:20px;
+  right:20px;
+  font-size:20px;
+  background:red;
+  color:white;
+  padding:5px 10px;
+  border-radius:5px;
+}
+</style>
+</head>
+<body>
+
+<div class="header">🔒 Private Gallery</div>
+
+<div class="passwordBox" id="passwordSection">
+  <p>Enter Password</p>
+  <input type="password" id="passwordInput">
+  <br>
+  <button onclick="unlock()">Unlock</button>
+  <div id="error"></div>
+</div>
+
+<div id="gallerySection" style="display:none;">
+  <div class="categoryBar" id="categoryBar"></div>
+  <div class="gallery" id="gallery"></div>
+</div>
+
+<div class="fullscreen" id="fullscreen">
+  <button class="closeBtn" onclick="closeFull()">X</button>
+  <img id="fullImage">
+</div>
+
+<script>
+const firebaseConfig = {
+  apiKey: "AIzaSyAgZoSMT4LpAGUNUh3KQEVW-8ksGMTWsQs",
+  authDomain: "ahmed-paper-decoration--album.firebaseapp.com",
+  projectId: "ahmed-paper-decoration--album"
+};
+
+firebase.initializeApp(firebaseConfig);
+const db = firebase.firestore();
+
+const params = new URLSearchParams(window.location.search);
+const albumId = params.get("id");
+
+let albumData = null;
+
+function unlock(){
+  const inputPassword = document.getElementById("passwordInput").value;
+
+  db.collection("albums").doc(albumId).get().then(doc=>{
+    if(!doc.exists){
+      document.getElementById("error").innerText="Album not found.";
+      return;
+    }
+
+    const data = doc.data();
+    const now = new Date();
+    const expiryDate = new Date(data.expiry);
+
+    if(now > expiryDate){
+      document.getElementById("error").innerText="⏰ Album expired.";
+      return;
+    }
+
+    if(inputPassword.trim() === data.password.trim()){
+      albumData = data;
+      document.getElementById("passwordSection").style.display="none";
+      document.getElementById("gallerySection").style.display="block";
+      renderCategories();
+    } else {
+      document.getElementById("error").innerText="❌ Wrong password.";
+    }
+  });
+}
+
+function renderCategories(){
+  const categoryBar = document.getElementById("categoryBar");
+  categoryBar.innerHTML = "";
+
+  if(!albumData.categories){
+    showImages("default");
+    return;
+  }
+
+  Object.keys(albumData.categories).forEach((cat,index)=>{
+    const btn = document.createElement("button");
+    btn.innerText = cat;
+    btn.onclick = ()=>showImages(cat);
+    if(index===0){
+      btn.classList.add("active");
+      showImages(cat);
+    }
+    categoryBar.appendChild(btn);
+  });
+}
+
+function showImages(category){
+  const gallery = document.getElementById("gallery");
+  gallery.innerHTML = "";
+
+  document.querySelectorAll(".categoryBar button")
+    .forEach(btn=>btn.classList.remove("active"));
+
+  const buttons = document.querySelectorAll(".categoryBar button");
+  buttons.forEach(btn=>{
+    if(btn.innerText===category){
+      btn.classList.add("active");
+    }
+  });
+
+  const images = albumData.categories[category] || [];
+
+  images.forEach(img=>{
+    const image = document.createElement("img");
+    image.src = img;
+    image.onclick = ()=>openFull(img);
+    gallery.appendChild(image);
+  });
+}
+
+function openFull(src){
+  document.getElementById("fullscreen").style.display="flex";
+  document.getElementById("fullImage").src = src;
+}
+
+function closeFull(){
+  document.getElementById("fullscreen").style.display="none";
+}
+</script>
+
+</body>
+</html>
