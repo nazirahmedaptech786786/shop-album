@@ -88,16 +88,19 @@ function createAlbum(){
   const expiryDate = new Date();
   expiryDate.setHours(expiryDate.getHours() + hours);
 
-  db.collection("albums").add({
-    customerName: name,
-    password: password,
-    expiry: expiryDate.toISOString(),
-    images: []
-  }).then(()=>{
-    alert("✅ Album Created\nPassword: "+password);
-    loadAlbums();
-  });
-}
+db.collection("albums").add({
+  customerName: name,
+  password: password,
+  expiry: expiryDate.toISOString(),
+  categories: {
+    Balloons: [],
+    Mayon: [],
+    "Baat Paki": [],
+    "Nikkah Mubarak": [],
+    "Wellcome Babay": [],
+    Others: []
+  }
+})
 
 function copyText(text){
   navigator.clipboard.writeText(text);
@@ -105,6 +108,14 @@ function copyText(text){
 }
 
 function uploadImage(albumId){
+
+  const category = prompt("Enter Category Name exactly (Balloons / Mayon / Baat Paki / Nikkah Mubarak / Wellcome Babay / Others)");
+
+  if(!category){
+    alert("Category required");
+    return;
+  }
+
   const input = document.createElement("input");
   input.type = "file";
   input.accept = "image/*";
@@ -117,10 +128,10 @@ function uploadImage(albumId){
       const base64Image = reader.result;
 
       db.collection("albums").doc(albumId).update({
-        images: firebase.firestore.FieldValue.arrayUnion(base64Image)
+        [`categories.${category}`]:
+          firebase.firestore.FieldValue.arrayUnion(base64Image)
       }).then(()=>{
-        alert("✅ Image Uploaded");
-        loadAlbums();
+        alert("✅ Image Uploaded to " + category);
       });
     };
 
