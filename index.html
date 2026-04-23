@@ -11,12 +11,13 @@
 <style>
 body{margin:0;font-family:Arial;background:#111;color:white;text-align:center;padding:40px;}
 h1{color:#ff9800;}
-button{padding:10px 20px;background:#ff9800;border:none;border-radius:5px;font-weight:bold;cursor:pointer;margin-top:10px;}
+button{padding:8px 15px;background:#ff9800;border:none;border-radius:5px;font-weight:bold;cursor:pointer;margin:5px;}
 input,select{padding:8px;margin:5px;border-radius:5px;border:none;}
 #adminPanel{display:none;margin-top:30px;}
 #denied{display:none;color:red;font-weight:bold;margin-top:20px;}
-.albumCard{background:#1e1e1e;padding:15px;margin:15px auto;border-radius:8px;width:300px;}
+.albumCard{background:#1e1e1e;padding:15px;margin:15px auto;border-radius:8px;width:340px;}
 .formBox{background:#1e1e1e;padding:20px;border-radius:8px;width:320px;margin:20px auto;}
+.smallBtn{font-size:12px;padding:5px 10px;}
 </style>
 </head>
 <body>
@@ -92,9 +93,14 @@ function createAlbum(){
     password: password,
     expiry: expiryDate.toISOString()
   }).then(()=>{
-    alert("Album Created ✅\nPassword: "+password);
+    alert("✅ Album Created\nPassword: "+password);
     loadAlbums();
   });
+}
+
+function copyText(text){
+  navigator.clipboard.writeText(text);
+  alert("✅ Copied!");
 }
 
 function loadAlbums(){
@@ -104,13 +110,21 @@ function loadAlbums(){
   db.collection("albums").get().then(snapshot=>{
     snapshot.forEach(doc=>{
       const data = doc.data();
+      const albumId = doc.id;
+
+      const albumLink =
+        "https://nazirahmedaptech786786.github.io/shop-album/album.html?id=" + albumId;
+
       const div = document.createElement("div");
       div.className="albumCard";
       div.innerHTML=`
         <b>Customer:</b> ${data.customerName}<br>
-        <b>Password:</b> ${data.password}<br>
-        <b>Expiry:</b> ${new Date(data.expiry).toLocaleString()}
+        <b>Password:</b> ${data.password}
+        <button class="smallBtn" onclick="copyText('${data.password}')">Copy</button><br>
+        <b>Expiry:</b> ${new Date(data.expiry).toLocaleString()}<br><br>
+        <button class="smallBtn" onclick="copyText('${albumLink}')">Copy Link</button>
       `;
+
       albumList.appendChild(div);
     });
   });
