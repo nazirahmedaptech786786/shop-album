@@ -9,37 +9,14 @@
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
 
 <style>
-body{
-  margin:0;
-  font-family:Arial;
-  background:#111;
-  color:white;
-  text-align:center;
-  padding:40px;
-}
-
+body{margin:0;font-family:Arial;background:#111;color:white;text-align:center;padding:40px;}
 h1{color:#ff9800;}
-
-button{
-  padding:10px 20px;
-  background:#ff9800;
-  border:none;
-  border-radius:5px;
-  font-weight:bold;
-  cursor:pointer;
-  margin-top:10px;
-}
-
+button{padding:10px 20px;background:#ff9800;border:none;border-radius:5px;font-weight:bold;cursor:pointer;margin-top:10px;}
+input,select{padding:8px;margin:5px;border-radius:5px;border:none;}
 #adminPanel{display:none;margin-top:30px;}
 #denied{display:none;color:red;font-weight:bold;margin-top:20px;}
-
-.albumCard{
-  background:#1e1e1e;
-  padding:15px;
-  margin:15px auto;
-  border-radius:8px;
-  width:300px;
-}
+.albumCard{background:#1e1e1e;padding:15px;margin:15px auto;border-radius:8px;width:300px;}
+.formBox{background:#1e1e1e;padding:20px;border-radius:8px;width:320px;margin:20px auto;}
 </style>
 </head>
 <body>
@@ -56,7 +33,18 @@ button{
   <p id="userEmail"></p>
   <button onclick="logout()">Logout</button>
 
-  <h3 style="margin-top:30px;">📂 Albums</h3>
+  <div class="formBox">
+    <h3>➕ Create New Album</h3>
+    <input type="text" id="customerName" placeholder="Customer Name"><br>
+    <select id="expiryHours">
+      <option value="2">2 Hours</option>
+      <option value="24">24 Hours</option>
+      <option value="48">48 Hours</option>
+    </select><br>
+    <button onclick="createAlbum()">Create Album</button>
+  </div>
+
+  <h3>📂 Albums</h3>
   <div id="albumList"></div>
 </div>
 
@@ -75,7 +63,6 @@ const firebaseConfig = {
 };
 
 firebase.initializeApp(firebaseConfig);
-
 const auth = firebase.auth();
 const db = firebase.firestore();
 
@@ -88,6 +75,28 @@ function logout(){
   auth.signOut();
 }
 
+function generatePassword(){
+  return Math.random().toString(36).substring(2,8);
+}
+
+function createAlbum(){
+  const name = document.getElementById("customerName").value;
+  const hours = parseInt(document.getElementById("expiryHours").value);
+  const password = generatePassword();
+
+  const expiryDate = new Date();
+  expiryDate.setHours(expiryDate.getHours() + hours);
+
+  db.collection("albums").add({
+    customerName: name,
+    password: password,
+    expiry: expiryDate.toISOString()
+  }).then(()=>{
+    alert("Album Created ✅\nPassword: "+password);
+    loadAlbums();
+  });
+}
+
 function loadAlbums(){
   const albumList = document.getElementById("albumList");
   albumList.innerHTML = "";
@@ -95,15 +104,13 @@ function loadAlbums(){
   db.collection("albums").get().then(snapshot=>{
     snapshot.forEach(doc=>{
       const data = doc.data();
-
       const div = document.createElement("div");
-      div.className = "albumCard";
-      div.innerHTML = `
+      div.className="albumCard";
+      div.innerHTML=`
         <b>Customer:</b> ${data.customerName}<br>
         <b>Password:</b> ${data.password}<br>
-        <b>Expiry:</b> ${data.expiry}
+        <b>Expiry:</b> ${new Date(data.expiry).toLocaleString()}
       `;
-
       albumList.appendChild(div);
     });
   });
@@ -111,7 +118,6 @@ function loadAlbums(){
 
 auth.onAuthStateChanged(async (user)=>{
   if(user){
-
     const snapshot = await db.collection("admins")
       .where("email","==",user.email)
       .get();
@@ -121,14 +127,12 @@ auth.onAuthStateChanged(async (user)=>{
       document.getElementById("adminPanel").style.display="block";
       document.getElementById("denied").style.display="none";
       document.getElementById("userEmail").innerText="Logged in as: "+user.email;
-
-      loadAlbums(); // ✅ albums load
+      loadAlbums();
     } else {
       document.getElementById("loginDiv").style.display="none";
       document.getElementById("adminPanel").style.display="none";
       document.getElementById("denied").style.display="block";
     }
-
   } else {
     document.getElementById("loginDiv").style.display="block";
     document.getElementById("adminPanel").style.display="none";
