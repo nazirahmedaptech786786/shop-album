@@ -21,10 +21,27 @@ h1{color:#ff9800;}
 
 .albumBox{
   background:#1e1e1e;
-  padding:30px;
+  padding:20px;
   border-radius:10px;
-  width:350px;
+  width:90%;
+  max-width:900px;
   margin:30px auto;
+}
+
+.gallery{
+  display:flex;
+  flex-wrap:wrap;
+  justify-content:center;
+  gap:15px;
+  margin-top:20px;
+}
+
+.gallery img{
+  width:200px;
+  height:200px;
+  object-fit:cover;
+  border-radius:8px;
+  border:2px solid #333;
 }
 
 .expired{
@@ -77,12 +94,22 @@ if(!albumId){
       return;
     }
 
+    let imageHTML = "";
+
+    if(data.images && data.images.length > 0){
+      imageHTML = "<div class='gallery'>";
+      data.images.forEach(img=>{
+        imageHTML += `<img src="${img}" />`;
+      });
+      imageHTML += "</div>";
+    } else {
+      imageHTML = "<p>No images uploaded yet.</p>";
+    }
+
     document.getElementById("albumContent").innerHTML = `
       <h2>✅ ${data.customerName}</h2>
-      <p>Album Access Active</p>
       <p>Expiry: ${expiryDate.toLocaleString()}</p>
-      <hr>
-      <p>📸 Photos will appear here (Next Step)</p>
+      ${imageHTML}
     `;
   });
 }
