@@ -96,11 +96,10 @@ function checkPassword(){
       return;
     }
 
-    if(inputPassword === data.password){
-      document.getElementById("passwordBox").style.display="none";
-      document.getElementById("albumContent").style.display="block";
-      document.getElementById("customerName").innerText=
-        "Customer: "+data.customerName;
+if(inputPassword === data.password){
+  window.location.href = 
+    "view.html?id=" + albumId;
+}
     } else {
       document.getElementById("error").innerText="❌ Wrong password.";
     }
